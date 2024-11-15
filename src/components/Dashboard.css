@@ -1,0 +1,176 @@
+.dashboard {
+  padding: 20px;
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+header h1 {
+  margin: 0;
+  font-size: 24px;
+}
+
+.error-message {
+  color: red;
+  margin: 10px 0;
+  padding: 10px;
+  background-color: #ffebee;
+  border-radius: 4px;
+}
+
+.groups-section, .lists-section {
+  margin-bottom: 30px;
+}
+
+form {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+input {
+  flex: 1;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+button {
+  padding: 8px 16px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #45a049;
+}
+
+.groups-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.group-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.group-item.selected {
+  background-color: #e3f2fd;
+  border: 1px solid #2196f3;
+}
+
+.group-actions {
+  display: flex;
+  gap: 5px;
+}
+
+.group-actions button {
+  padding: 4px 8px;
+  font-size: 12px;
+}
+
+.lists-container {
+  display: flex;
+  gap: 20px;
+  overflow-x: auto;
+  padding: 20px 0;
+  min-height: 100px;
+}
+
+.list {
+  flex: 0 0 300px;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+  padding: 10px;
+}
+
+.list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  cursor: move;
+}
+
+.list-header h3 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.list-actions {
+  display: flex;
+  gap: 5px;
+}
+
+.list-actions button {
+  padding: 4px 8px;
+  font-size: 12px;
+}
+
+.symbols-container {
+  min-height: 50px;
+  background-color: white;
+  border-radius: 4px;
+  padding: 10px;
+  margin-bottom: 10px;
+}
+
+.symbol {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px;
+  margin-bottom: 5px;
+  background-color: #e3f2fd;
+  border-radius: 4px;
+  cursor: move;
+}
+
+.symbol button {
+  padding: 2px 6px;
+  font-size: 12px;
+  background-color: #ff5252;
+}
+
+.symbol button:hover {
+  background-color: #ff1744;
+}
+
+.add-symbol-form {
+  display: flex;
+  gap: 5px;
+}
+
+.add-symbol-form input {
+  flex: 1;
+  padding: 6px;
+  font-size: 14px;
+}
+
+.add-symbol-form button {
+  padding: 6px 12px;
+  font-size: 14px;
+}
+
+/* Drag and drop styles */
+.dragging {
+  opacity: 0.5;
+}
+
+.dragging-over {
+  background-color: #e8f5e9;
+}

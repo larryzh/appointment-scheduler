@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Appointment Scheduler App - Setup Instructions</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        h1, h2 {
+            color: #333;
+        }
+        code {
+            background-color: #f4f4f4;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            display: block;
+            padding: 10px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Appointment Scheduler App</h1>
+    <p>This React-based appointment scheduling app includes the following features:</p>
+    <ul>
+        <li>User authentication (login, signup, password reset) using Supabase</li>
+        <li>Host dashboard for creating and managing appointments</li>
+        <li>Visitor dashboard for booking available appointments</li>
+        <li>Navigation between Host and Visitor dashboards</li>
+        <li>Route protection for authenticated users</li>
+    </ul>
+
+    <h2>Setup Instructions</h2>
+    <ol>
+        <li>Make sure you have Node.js and npm installed on your system.</li>
+        <li>Open a terminal and navigate to the project directory:
+            <code>cd appointment-scheduler</code>
+        </li>
+        <li>Install the required dependencies:
+            <code>npm install react react-dom react-router-dom @supabase/supabase-js</code>
+        </li>
+        <li>Start the development server:
+            <code>npm start</code>
+        </li>
+    </ol>
+
+    <p>The application should now be running on <a href="http://localhost:3000">http://localhost:3000</a></p>
+
+    <h2>Supabase Setup</h2>
+    <p>You'll need to set up the Supabase database with the following SQL script to create the necessary table for storing appointments:</p>
+    <code>
+create table appointments (
+  id uuid default uuid_generate_v4() primary key,
+  host_id uuid references auth.users(id),
+  visitor_id uuid references auth.users(id),
+  date date not null,
+  time time not null,
+  price decimal(10, 2) not null,
+  note text,
+  created_at timestamp with time zone default now()
+);
+    </code>
+    <p>Run this SQL in the Supabase SQL editor to create the table.</p>
+
+    <h2>Testing the Application</h2>
+    <p>You can now test the application by following these steps:</p>
+    <ol>
+        <li>Sign up as a host and create appointments</li>
+        <li>Sign up as a visitor and book those appointments</li>
+    </ol>
+    <p>The app provides a basic structure that you can further customize and expand upon as needed.</p>
+</body>
+</html>

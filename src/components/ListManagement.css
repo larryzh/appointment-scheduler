@@ -1,0 +1,271 @@
+.list-management {
+  display: flex;
+  height: calc(100vh - 48px);
+  overflow: hidden;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: white;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.groups-section {
+  width: 200px;
+  padding: 15px;
+  background-color: #f5f5f5;
+  border-right: 1px solid #ddd;
+  overflow-y: auto;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.lists-section {
+  flex: 1;
+  padding: 15px 30px;
+  overflow-y: auto;
+  min-width: 0; /* Allows flex child to shrink below content size */
+}
+
+.groups-section h2,
+.lists-section h2 {
+  margin: 0 0 15px 0;
+  font-size: 1.2rem;
+  color: #333;
+}
+
+.lists-section h2 {
+  font-size: 1.5rem;
+}
+
+.add-form {
+  display: flex;
+  gap: 4px;
+}
+
+.add-form input {
+  flex: 1;
+  padding: 4px 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 13px;
+}
+
+.add-form button {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.groups-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.group-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 8px;
+  background-color: white;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  font-size: 13px;
+}
+
+.group-item:hover {
+  background-color: #f0f0f0;
+}
+
+.group-item.selected {
+  background-color: #e3f2fd;
+  border: 1px solid #2196f3;
+}
+
+.group-actions {
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.group-item:hover .group-actions {
+  opacity: 1;
+}
+
+.group-actions button {
+  padding: 2px 6px;
+  font-size: 11px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.lists-container {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  padding: 5px;
+  min-height: 100px;
+}
+
+.list {
+  background-color: #f5f5f5;
+  border-radius: 4px;
+  padding: 12px;
+  min-width: 0;
+  height: fit-content;
+}
+
+.list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  cursor: move;
+}
+
+.list-header h3 {
+  margin: 0;
+  font-size: 16px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.list-actions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.list-actions button {
+  padding: 2px 6px;
+  font-size: 12px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.symbols-container {
+  min-height: 50px;
+  background-color: white;
+  border-radius: 4px;
+  padding: 10px;
+  margin-bottom: 10px;
+}
+
+.symbol {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px;
+  margin-bottom: 5px;
+  background-color: #e3f2fd;
+  border-radius: 4px;
+  cursor: move;
+}
+
+.symbol span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.symbol button {
+  padding: 2px 6px;
+  font-size: 12px;
+  background-color: #ff5252;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-left: 8px;
+  flex-shrink: 0;
+}
+
+.add-symbol-form {
+  display: flex;
+  gap: 4px;
+}
+
+.add-symbol-form input {
+  flex: 1;
+  padding: 4px 8px;
+  font-size: 13px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.add-symbol-form button {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.no-selection {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  color: #666;
+}
+
+/* Drag and drop styles */
+.dragging {
+  opacity: 0.5;
+}
+
+.dragging-over {
+  background-color: #e8f5e9;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+  .lists-container {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .list-management {
+    flex-direction: column;
+  }
+
+  .groups-section {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid #ddd;
+  }
+
+  .lists-container {
+    grid-template-columns: 1fr;
+  }
+}

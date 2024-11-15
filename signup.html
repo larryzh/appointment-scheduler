@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up - Appointment Scheduler</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .error-message {
+            color: red;
+            margin: 10px 0;
+            display: none;
+        }
+        #loading {
+            display: none;
+            color: #666;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Sign Up</h1>
+        <div id="error-display" class="error-message"></div>
+        <div id="loading">Processing signup...</div>
+        <form id="signup-form">
+            <input type="email" id="email" placeholder="Email" required>
+            <input type="password" id="password" placeholder="Password" required minlength="6">
+            <select id="user-type" required>
+                <option value="">Select User Type</option>
+                <option value="host">Host</option>
+                <option value="visitor">Visitor</option>
+            </select>
+            <button type="submit">Sign Up</button>
+        </form>
+        <p>Already have an account? <a href="login.html">Login</a></p>
+    </div>
+
+    <!-- Load Supabase with specific version -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/dist/umd/supabase.min.js"></script>
+    
+    <!-- For debugging -->
+    <script>
+        window.addEventListener('error', function(e) {
+            console.error('Global error:', e.error);
+            document.getElementById('error-display').style.display = 'block';
+            document.getElementById('error-display').textContent = 'Error: ' + e.error.message;
+        });
+    </script>
+    
+    <!-- Load our signup script -->
+    <script src="signup.js"></script>
+</body>
+</html>

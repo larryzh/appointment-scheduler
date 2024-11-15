@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Appointment Scheduler 2</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>Appointment Scheduler</h1>
+        <div id="user-info"></div>
+        <div id="logout-button"></div>
+        <div id="host-section" style="display: none;">
+            <h2>Set Up Available Time Slots</h2>
+            <input type="date" id="date-input">
+            <select id="time-input">
+                <option value="">Select Time</option>
+                <option value="08:00">08:00 - 10:00</option>
+                <option value="10:00">10:00 - 12:00</option>
+                <option value="12:00">12:00 - 14:00</option>
+                <option value="14:00">14:00 - 16:00</option>
+                <option value="16:00">16:00 - 18:00</option>
+            </select>
+            <button id="add-slot">Add Time Slot</button>
+            <ul id="available-slots"></ul>
+        </div>
+        <div id="visitor-section" style="display: none;">
+            <h2>Reserve a Time Slot</h2>
+            <ul id="reservation-slots"></ul>
+        </div>
+        <div>
+            <a href="change_password.html">Change Password</a>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>

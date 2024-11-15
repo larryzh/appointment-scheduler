@@ -1,0 +1,139 @@
+.app-container {
+  padding: 20px;
+  max-width: 100%;
+  margin: 0 auto;
+}
+
+.main-content {
+  margin-top: 20px;
+}
+
+.symbol-list-organizer {
+  padding: 20px;
+}
+
+.lists-container {
+  display: flex;
+  gap: 20px;
+  overflow-x: auto;
+  padding: 10px 0;
+  min-height: 100px;
+}
+
+.list-container {
+  background: white;
+  border-radius: 6px;
+  padding: 10px;
+  min-width: 250px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #eee;
+}
+
+.list-title {
+  flex-grow: 1;
+}
+
+.list-title h3 {
+  margin: 0;
+  color: #333;
+}
+
+.list-actions {
+  display: flex;
+  gap: 5px;
+}
+
+.symbol-list {
+  min-height: 50px;
+  margin: 10px 0;
+}
+
+.symbol {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px;
+  margin: 5px 0;
+  background: #f8f9fa;
+  border-radius: 4px;
+  border: 1px solid #e9ecef;
+}
+
+.add-list-form,
+.add-symbol-form {
+  display: flex;
+  gap: 10px;
+  margin: 10px 0;
+}
+
+input {
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  flex-grow: 1;
+}
+
+button {
+  padding: 8px 16px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+.edit-button {
+  background-color: #6c757d;
+}
+
+.edit-button:hover {
+  background-color: #545b62;
+}
+
+.delete-button {
+  background-color: #dc3545;
+  padding: 4px 8px;
+}
+
+.delete-button:hover {
+  background-color: #c82333;
+}
+
+.dragging {
+  opacity: 0.5;
+}
+
+.dragging-over {
+  background-color: #e9ecef;
+}
+
+/* Scrollbar styling */
+.lists-container::-webkit-scrollbar {
+  height: 8px;
+}
+
+.lists-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.lists-container::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+.lists-container::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
