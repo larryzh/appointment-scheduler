@@ -3,7 +3,7 @@ import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import { supabase } from '../supabaseClient';
 import './ListManagement.css';
 
-function ListManagement() {
+function ListManagementWithDragGroups() {
   const [groups, setGroups] = useState([]);
   const [selectedGroup, setSelectedGroup] = useState(null);
   const [lists, setLists] = useState([]);
@@ -521,4 +521,4 @@ function ListManagement() {
   );
 }
 
-export default ListManagement;
+export default ListManagementWithDragGroups;
