@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { supabase } from './supabaseClient';
 import Navigation from './components/Navigation';
-import ListManagement from './components/ListManagement';
+import ListManagementWithDragGroups from './components/ListManagementWithDragGroups';
 import './App.css';
 
 function App() {
@@ -19,7 +19,7 @@ function App() {
       <div className="app">
         <Navigation activeTab={activeTab} onTabChange={setActiveTab} />
         <div className="main-content">
-          {activeTab === 'lists' && <ListManagement />}
+          {activeTab === 'lists' && <ListManagementWithDragGroups />}
           {/* Add more tab content components here */}
         </div>
       </div>

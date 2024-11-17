@@ -27,6 +27,13 @@ function ListManagementWithDragGroups() {
     }
   }, [selectedGroup]);
 
+  const formatDate = (date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
   const fetchGroups = async () => {
     try {
       const { data, error } = await supabase
@@ -69,7 +76,6 @@ function ListManagementWithDragGroups() {
   const copyGroup = async (e, group) => {
     e.stopPropagation();
     try {
-      // First create a copy of the group
       const { data: newGroup, error: groupError } = await supabase
         .from('groups')
         .insert([{ 
@@ -81,7 +87,6 @@ function ListManagementWithDragGroups() {
 
       if (groupError) throw groupError;
 
-      // Fetch all lists from the original group
       const { data: originalLists, error: listsError } = await supabase
         .from('lists')
         .select('*')
@@ -89,7 +94,6 @@ function ListManagementWithDragGroups() {
 
       if (listsError) throw listsError;
 
-      // Create copies of all lists with their symbols
       if (originalLists) {
         const listCopies = originalLists.map(list => ({
           name: list.name,
@@ -105,7 +109,6 @@ function ListManagementWithDragGroups() {
         if (copyError) throw copyError;
       }
 
-      // Refresh the groups list
       fetchGroups();
     } catch (error) {
       setError(error.message);
@@ -156,19 +159,45 @@ function ListManagementWithDragGroups() {
   const removeGroup = async (e, groupId) => {
     e.stopPropagation();
     try {
-      const { error } = await supabase
+      const { error: listsError } = await supabase
+        .from('lists')
+        .delete()
+        .eq('group_id', groupId);
+
+      if (listsError) throw listsError;
+
+      const { error: groupError } = await supabase
         .from('groups')
         .delete()
         .eq('id', groupId);
 
-      if (error) throw error;
+      if (groupError) throw groupError;
 
       setGroups(groups.filter(group => group.id !== groupId));
       if (selectedGroup?.id === groupId) {
         setSelectedGroup(null);
         setLists([]);
       }
+
+      const updatedGroups = groups
+        .filter(group => group.id !== groupId)
+        .map((group, index) => ({
+          ...group,
+          position: index
+        }));
+
+      const updates = updatedGroups.map(group => 
+        supabase
+          .from('groups')
+          .update({ position: group.position })
+          .eq('id', group.id)
+      );
+
+      await Promise.all(updates);
+      
+      fetchGroups();
     } catch (error) {
+      console.error('Error removing group:', error);
       setError(error.message);
     }
   };
@@ -273,50 +302,73 @@ function ListManagementWithDragGroups() {
   };
 
   const onDragEnd = async (result) => {
+    console.log('Drag end result:', result);
+
+    if (!result.destination) {
+      console.log('No destination');
+      return;
+    }
+
     const { source, destination, type } = result;
 
-    if (!destination) return;
+    // If dropped in same spot
+    if (source.droppableId === destination.droppableId && source.index === destination.index) {
+      console.log('Dropped in same spot');
+      return;
+    }
 
     try {
       if (type === 'GROUP') {
+        console.log('Reordering groups...');
         const newGroups = Array.from(groups);
         const [removed] = newGroups.splice(source.index, 1);
         newGroups.splice(destination.index, 0, removed);
 
+        console.log('Setting new groups order:', newGroups);
         setGroups(newGroups);
 
-        // Update positions in database
-        const updates = newGroups.map((group, index) => 
-          supabase
-            .from('groups')
-            .update({ position: index })
-            .eq('id', group.id)
+        console.log('Updating group positions in database...');
+        await Promise.all(
+          newGroups.map((group, index) => 
+            supabase
+              .from('groups')
+              .update({ position: index })
+              .eq('id', group.id)
+          )
         );
-
-        await Promise.all(updates);
-      } else if (type === 'LIST' && source.droppableId === 'all-lists' && destination.droppableId === 'all-lists') {
+        console.log('Group positions updated');
+      } else if (type === 'LIST') {
+        console.log('Reordering lists...');
         const newLists = Array.from(lists);
         const [removed] = newLists.splice(source.index, 1);
         newLists.splice(destination.index, 0, removed);
 
+        console.log('Setting new lists order:', newLists);
         setLists(newLists);
 
-        // Update positions in database
-        const updates = newLists.map((list, index) => 
-          supabase
-            .from('lists')
-            .update({ position: index })
-            .eq('id', list.id)
+        console.log('Updating list positions in database...');
+        await Promise.all(
+          newLists.map((list, index) => 
+            supabase
+              .from('lists')
+              .update({ position: index })
+              .eq('id', list.id)
+          )
         );
-
-        await Promise.all(updates);
+        console.log('List positions updated');
       } else if (type === 'SYMBOL') {
-        const sourceList = lists.find(l => l.id.toString() === source.droppableId);
-        const destList = lists.find(l => l.id.toString() === destination.droppableId);
+        console.log('Moving symbol...');
+        const sourceListId = source.droppableId.replace('symbols-', '');
+        const destListId = destination.droppableId.replace('symbols-', '');
+        
+        const sourceList = lists.find(l => l.id.toString() === sourceListId);
+        const destList = sourceListId === destListId 
+          ? sourceList 
+          : lists.find(l => l.id.toString() === destListId);
 
         if (sourceList && destList) {
           const sourceSymbols = Array.from(sourceList.symbols || []);
-          const destSymbols = source.droppableId === destination.droppableId 
+          const destSymbols = sourceListId === destListId 
             ? sourceSymbols 
             : Array.from(destList.symbols || []);
 
@@ -324,35 +376,40 @@ function ListManagementWithDragGroups() {
           destSymbols.splice(destination.index, 0, movedSymbol);
 
           const newLists = lists.map(list => {
-            if (list.id === sourceList.id) {
+            if (list.id.toString() === sourceListId) {
               return { ...list, symbols: sourceSymbols };
             }
-            if (list.id === destList.id) {
+            if (list.id.toString() === destListId) {
               return { ...list, symbols: destSymbols };
             }
             return list;
           });
 
+          console.log('Setting new lists state:', newLists);
           setLists(newLists);
 
-          // Update both lists in database
-          await supabase
-            .from('lists')
-            .update({ symbols: sourceSymbols })
-            .eq('id', sourceList.id);
-
-          if (source.droppableId !== destination.droppableId) {
-            await supabase
+          console.log('Updating lists in database...');
+          await Promise.all([
+            supabase
               .from('lists')
-              .update({ symbols: destSymbols })
-              .eq('id', destList.id);
-          }
+              .update({ symbols: sourceSymbols })
+              .eq('id', sourceListId),
+            ...(sourceListId !== destListId ? [
+              supabase
+                .from('lists')
+                .update({ symbols: destSymbols })
+                .eq('id', destListId)
+            ] : [])
+          ]);
+          console.log('Lists updated in database');
         }
       }
     } catch (error) {
+      console.error('Error in drag end:', error);
       setError(error.message);
-      // Refresh lists on error
-      if (selectedGroup) {
+      if (type === 'GROUP') {
+        fetchGroups();
+      } else if (type === 'LIST' || type === 'SYMBOL') {
         fetchLists();
       }
     }
@@ -379,6 +436,7 @@ function ListManagementWithDragGroups() {
                 ref={provided.innerRef}
                 {...provided.droppableProps}
                 className={`groups-list ${snapshot.isDraggingOver ? 'dragging-over' : ''}`}
+                style={{ minHeight: '50px' }}
               >
                 {groups.map((group, index) => (
                   <Draggable
@@ -393,19 +451,32 @@ function ListManagementWithDragGroups() {
                         {...provided.dragHandleProps}
                         className={`group-item ${selectedGroup?.id === group.id ? 'selected' : ''} ${snapshot.isDragging ? 'dragging' : ''}`}
                         onClick={() => handleGroupSelect(group)}
+                        style={{
+                          ...provided.draggableProps.style,
+                          cursor: snapshot.isDragging ? 'grabbing' : 'grab'
+                        }}
                       >
                         <span>{group.name}</span>
-                        <div className="group-actions">
-                          <button onClick={(e) => copyGroup(e, group)}>Copy</button>
+                        <div 
+                          className="group-actions"
+                          onClick={e => e.stopPropagation()}
+                        >
+                          <button onClick={(e) => copyGroup(e, group)}>
+                            Copy
+                          </button>
                           <button onClick={(e) => {
-                            e.stopPropagation();
                             const newName = prompt('Enter new name:', group.name);
                             if (newName) editGroup(e, group.id, newName);
-                          }}>Edit</button>
+                          }}>
+                            Edit
+                          </button>
                           <button onClick={(e) => {
-                            e.stopPropagation();
-                            removeGroup(e, group.id);
-                          }}>×</button>
+                            if (window.confirm('Are you sure you want to delete this group?')) {
+                              removeGroup(e, group.id);
+                            }
+                          }}>
+                            ×
+                          </button>
                         </div>
                       </div>
                     )}
@@ -420,7 +491,12 @@ function ListManagementWithDragGroups() {
         <div className="lists-section">
           {selectedGroup ? (
             <>
-              <h2>Lists for {selectedGroup.name}</h2>
+              <div className="lists-header">
+                <div className="header-content">
+                  <span className="current-date">{formatDate(new Date())}</span>
+                  <h2>Lists for {selectedGroup.name}</h2>
+                </div>
+              </div>
               <form className="add-form" onSubmit={addList}>
                 <input
                   type="text"
@@ -431,7 +507,7 @@ function ListManagementWithDragGroups() {
                 <button type="submit">+</button>
               </form>
 
-              <Droppable droppableId="all-lists" direction="horizontal" type="LIST">
+              <Droppable droppableId="lists-container" type="LIST" direction="horizontal">
                 {(provided, snapshot) => (
                   <div
                     ref={provided.innerRef}
@@ -461,7 +537,7 @@ function ListManagementWithDragGroups() {
                               </div>
                             </div>
 
-                            <Droppable droppableId={list.id.toString()} type="SYMBOL">
+                            <Droppable droppableId={`symbols-${list.id}`} type="SYMBOL">
                               {(provided, snapshot) => (
                                 <div
                                   ref={provided.innerRef}
@@ -471,7 +547,7 @@ function ListManagementWithDragGroups() {
                                   {(list.symbols || []).map((symbol, index) => (
                                     <Draggable
                                       key={symbol.id}
-                                      draggableId={symbol.id.toString()}
+                                      draggableId={`symbol-${symbol.id}`}
                                       index={index}
                                     >
                                       {(provided, snapshot) => (
@@ -480,9 +556,18 @@ function ListManagementWithDragGroups() {
                                           {...provided.draggableProps}
                                           {...provided.dragHandleProps}
                                           className={`symbol ${snapshot.isDragging ? 'dragging' : ''}`}
+                                          style={{
+                                            ...provided.draggableProps.style,
+                                            cursor: snapshot.isDragging ? 'grabbing' : 'grab'
+                                          }}
                                         >
                                           <span>{symbol.content}</span>
-                                          <button onClick={() => removeSymbol(list.id, symbol.id)}>×</button>
+                                          <button 
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              removeSymbol(list.id, symbol.id);
+                                            }}
+                                          >×</button>
                                         </div>
                                       )}
                                     </Draggable>

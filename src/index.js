@@ -14,11 +14,7 @@ const init = async () => {
 
     // Create root and render app
     const root = ReactDOM.createRoot(document.getElementById('root'));
-    root.render(
-      <React.StrictMode>
-        <App />
-      </React.StrictMode>
-    );
+    root.render(<App />);
   } catch (error) {
     console.error('Error during initialization:', error);
     // Show error to user
