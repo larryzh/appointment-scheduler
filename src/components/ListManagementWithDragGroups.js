@@ -4,9 +4,11 @@ import { supabase } from '../supabaseClient';
 import './ListManagement.css';
 
 function ListManagementWithDragGroups() {
+  const [sections, setSections] = useState([]);
   const [groups, setGroups] = useState([]);
   const [selectedGroup, setSelectedGroup] = useState(null);
   const [lists, setLists] = useState([]);
+  const [newSectionName, setNewSectionName] = useState('');
   const [newGroupName, setNewGroupName] = useState('');
   const [newListName, setNewListName] = useState('');
   const [newSymbol, setNewSymbol] = useState('');
@@ -15,6 +17,7 @@ function ListManagementWithDragGroups() {
 
   useEffect(() => {
     if (userId) {
+      fetchSections();
       fetchGroups();
     }
   }, [userId]);
@@ -34,6 +37,21 @@ function ListManagementWithDragGroups() {
     return `${year}-${month}-${day}`;
   };
 
+  const fetchSections = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('sections')
+        .select('*')
+        .eq('user_id', userId)
+        .order('position');
+
+      if (error) throw error;
+      setSections(data || []);
+    } catch (error) {
+      setError(error.message);
+    }
+  };
+
   const fetchGroups = async () => {
     try {
       const { data, error } = await supabase
@@ -43,7 +61,7 @@ function ListManagementWithDragGroups() {
         .order('position');
 
       if (error) throw error;
-      setGroups(data);
+      setGroups(data || []);
     } catch (error) {
       setError(error.message);
     }
@@ -59,6 +77,134 @@ function ListManagementWithDragGroups() {
 
       if (error) throw error;
       setLists(data || []);
+    } catch (error) {
+      setError(error.message);
+    }
+  };
+
+  const addSection = async (e) => {
+    e.preventDefault();
+    try {
+      if (!newSectionName.trim()) return;
+
+      const { data, error } = await supabase
+        .from('sections')
+        .insert([{
+          name: newSectionName.trim(),
+          user_id: userId,
+          position: sections.length,
+          color: '#' + Math.floor(Math.random()*16777215).toString(16),
+          is_expanded: true
+        }])
+        .select();
+
+      if (error) throw error;
+
+      setSections([...sections, data[0]]);
+      setNewSectionName('');
+    } catch (error) {
+      setError(error.message);
+    }
+  };
+
+  const editSection = async (sectionId, newName) => {
+    try {
+      const { error } = await supabase
+        .from('sections')
+        .update({ name: newName })
+        .eq('id', sectionId);
+
+      if (error) throw error;
+
+      setSections(sections.map(section =>
+        section.id === sectionId ? { ...section, name: newName } : section
+      ));
+    } catch (error) {
+      setError(error.message);
+    }
+  };
+
+  const toggleSection = async (sectionId) => {
+    try {
+      const section = sections.find(s => s.id === sectionId);
+      const { error } = await supabase
+        .from('sections')
+        .update({ is_expanded: !section.is_expanded })
+        .eq('id', sectionId);
+
+      if (error) throw error;
+
+      setSections(sections.map(section =>
+        section.id === sectionId ? { ...section, is_expanded: !section.is_expanded } : section
+      ));
+    } catch (error) {
+      setError(error.message);
+    }
+  };
+
+  const removeSection = async (sectionId) => {
+    try {
+      // First update all groups in this section to have no section
+      const { error: groupsError } = await supabase
+        .from('groups')
+        .update({ section_id: null })
+        .eq('section_id', sectionId);
+
+      if (groupsError) throw groupsError;
+
+      // Then delete the section
+      const { error: sectionError } = await supabase
+        .from('sections')
+        .delete()
+        .eq('id', sectionId);
+
+      if (sectionError) throw sectionError;
+
+      setSections(sections.filter(section => section.id !== sectionId));
+
+      // Update positions of remaining sections
+      const updatedSections = sections
+        .filter(section => section.id !== sectionId)
+        .map((section, index) => ({
+          ...section,
+          position: index
+        }));
+
+      const updates = updatedSections.map(section => 
+        supabase
+          .from('sections')
+          .update({ position: section.position })
+          .eq('id', section.id)
+      );
+
+      await Promise.all(updates);
+      
+      fetchSections();
+    } catch (error) {
+      console.error('Error removing section:', error);
+      setError(error.message);
+    }
+  };
+
+  const addGroup = async (e) => {
+    e.preventDefault();
+    try {
+      if (!newGroupName.trim()) return;
+
+      const { data, error } = await supabase
+        .from('groups')
+        .insert([{ 
+          name: newGroupName.trim(), 
+          user_id: userId,
+          position: groups.length,
+          section_id: null // New groups start unsectioned
+        }])
+        .select();
+
+      if (error) throw error;
+
+      setGroups([...groups, data[0]]);
+      setNewGroupName('');
     } catch (error) {
       setError(error.message);
     }
@@ -81,7 +227,8 @@ function ListManagementWithDragGroups() {
         .insert([{ 
           name: `${group.name} (Copy)`, 
           user_id: userId,
-          position: groups.length 
+          position: groups.length,
+          section_id: group.section_id
         }])
         .select();
 
@@ -110,29 +257,6 @@ function ListManagementWithDragGroups() {
       }
 
       fetchGroups();
-    } catch (error) {
-      setError(error.message);
-    }
-  };
-
-  const addGroup = async (e) => {
-    e.preventDefault();
-    try {
-      if (!newGroupName.trim()) return;
-
-      const { data, error } = await supabase
-        .from('groups')
-        .insert([{ 
-          name: newGroupName.trim(), 
-          user_id: userId,
-          position: groups.length 
-        }])
-        .select();
-
-      if (error) throw error;
-
-      setGroups([...groups, data[0]]);
-      setNewGroupName('');
     } catch (error) {
       setError(error.message);
     }
@@ -309,7 +433,7 @@ function ListManagementWithDragGroups() {
       return;
     }
 
-    const { source, destination, type } = result;
+    const { source, destination, type, draggableId } = result;
 
     // If dropped in same spot
     if (source.droppableId === destination.droppableId && source.index === destination.index) {
@@ -318,25 +442,95 @@ function ListManagementWithDragGroups() {
     }
 
     try {
-      if (type === 'GROUP') {
-        console.log('Reordering groups...');
-        const newGroups = Array.from(groups);
-        const [removed] = newGroups.splice(source.index, 1);
-        newGroups.splice(destination.index, 0, removed);
+      if (type === 'SECTION') {
+        console.log('Reordering sections...');
+        const newSections = Array.from(sections);
+        const [removed] = newSections.splice(source.index, 1);
+        newSections.splice(destination.index, 0, removed);
 
-        console.log('Setting new groups order:', newGroups);
-        setGroups(newGroups);
+        console.log('Setting new sections order:', newSections);
+        setSections(newSections);
 
-        console.log('Updating group positions in database...');
+        console.log('Updating section positions in database...');
         await Promise.all(
-          newGroups.map((group, index) => 
+          newSections.map((section, index) => 
+            supabase
+              .from('sections')
+              .update({ position: index })
+              .eq('id', section.id)
+          )
+        );
+        console.log('Section positions updated');
+      } else if (type === 'GROUP') {
+        console.log('Reordering groups...');
+        
+        // Get all groups for proper indexing
+        const allGroups = Array.from(groups);
+        const movedGroup = allGroups.find(g => g.id.toString() === draggableId);
+        
+        if (!movedGroup) {
+          console.error('Group not found:', draggableId);
+          return;
+        }
+
+        // Remove the group from its current position
+        const filteredGroups = allGroups.filter(g => g.id.toString() !== draggableId);
+
+        // Determine the new section_id
+        const sourceSection = source.droppableId.replace('section-', '');
+        const destSection = destination.droppableId.replace('section-', '');
+        
+        // Update section_id
+        movedGroup.section_id = destSection === 'unsectioned' ? null : parseInt(destSection);
+
+        // Get groups in the destination section for proper positioning
+        const destGroups = destSection === 'unsectioned'
+          ? filteredGroups.filter(g => !g.section_id)
+          : filteredGroups.filter(g => g.section_id === parseInt(destSection));
+
+        // Insert the group at the new position
+        destGroups.splice(destination.index, 0, movedGroup);
+
+        // Update positions for all groups in the destination section
+        const updatedGroups = destGroups.map((group, index) => ({
+          ...group,
+          position: index
+        }));
+
+        // Merge with groups from other sections
+        const finalGroups = [
+          ...filteredGroups.filter(g => {
+            if (destSection === 'unsectioned') {
+              return g.section_id !== null;
+            }
+            return g.section_id !== parseInt(destSection);
+          }),
+          ...updatedGroups
+        ];
+
+        console.log('Setting new groups:', finalGroups);
+        setGroups(finalGroups);
+
+        // Update the moved group in the database
+        await supabase
+          .from('groups')
+          .update({ 
+            section_id: movedGroup.section_id,
+            position: destination.index
+          })
+          .eq('id', movedGroup.id);
+
+        // Update positions for all affected groups
+        await Promise.all(
+          updatedGroups.map((group, index) => 
             supabase
               .from('groups')
               .update({ position: index })
               .eq('id', group.id)
           )
         );
-        console.log('Group positions updated');
+
+        console.log('Groups updated in database');
       } else if (type === 'LIST') {
         console.log('Reordering lists...');
         const newLists = Array.from(lists);
@@ -407,7 +601,9 @@ function ListManagementWithDragGroups() {
     } catch (error) {
       console.error('Error in drag end:', error);
       setError(error.message);
-      if (type === 'GROUP') {
+      if (type === 'SECTION') {
+        fetchSections();
+      } else if (type === 'GROUP') {
         fetchGroups();
       } else if (type === 'LIST' || type === 'SYMBOL') {
         fetchLists();
@@ -420,6 +616,16 @@ function ListManagementWithDragGroups() {
       <div className="list-management">
         <div className="groups-section">
           <h2>Groups</h2>
+          <form className="add-form" onSubmit={addSection}>
+            <input
+              type="text"
+              value={newSectionName}
+              onChange={(e) => setNewSectionName(e.target.value)}
+              placeholder="New section name"
+            />
+            <button type="submit">+</button>
+          </form>
+
           <form className="add-form" onSubmit={addGroup}>
             <input
               type="text"
@@ -430,58 +636,164 @@ function ListManagementWithDragGroups() {
             <button type="submit">+</button>
           </form>
 
-          <Droppable droppableId="groups-list" type="GROUP">
+          <Droppable droppableId="sections-list" type="SECTION">
             {(provided, snapshot) => (
               <div
                 ref={provided.innerRef}
                 {...provided.droppableProps}
-                className={`groups-list ${snapshot.isDraggingOver ? 'dragging-over' : ''}`}
-                style={{ minHeight: '50px' }}
+                className={`sections-list ${snapshot.isDraggingOver ? 'dragging-over' : ''}`}
               >
-                {groups.map((group, index) => (
+                {sections.map((section, index) => (
                   <Draggable
-                    key={group.id}
-                    draggableId={group.id.toString()}
+                    key={section.id}
+                    draggableId={`section-${section.id}`}
                     index={index}
                   >
                     {(provided, snapshot) => (
                       <div
                         ref={provided.innerRef}
                         {...provided.draggableProps}
-                        {...provided.dragHandleProps}
-                        className={`group-item ${selectedGroup?.id === group.id ? 'selected' : ''} ${snapshot.isDragging ? 'dragging' : ''}`}
-                        onClick={() => handleGroupSelect(group)}
+                        className={`section-item ${snapshot.isDragging ? 'dragging' : ''}`}
                         style={{
                           ...provided.draggableProps.style,
-                          cursor: snapshot.isDragging ? 'grabbing' : 'grab'
+                          backgroundColor: section.color
                         }}
                       >
-                        <span>{group.name}</span>
                         <div 
-                          className="group-actions"
-                          onClick={e => e.stopPropagation()}
+                          className="section-header" 
+                          {...provided.dragHandleProps}
+                          onClick={() => toggleSection(section.id)}
                         >
-                          <button onClick={(e) => copyGroup(e, group)}>
-                            Copy
-                          </button>
-                          <button onClick={(e) => {
-                            const newName = prompt('Enter new name:', group.name);
-                            if (newName) editGroup(e, group.id, newName);
-                          }}>
-                            Edit
-                          </button>
-                          <button onClick={(e) => {
-                            if (window.confirm('Are you sure you want to delete this group?')) {
-                              removeGroup(e, group.id);
-                            }
-                          }}>
-                            ×
-                          </button>
+                          <span className="section-name">{section.name}</span>
+                          <div className="section-actions">
+                            <button onClick={(e) => {
+                              e.stopPropagation();
+                              const newName = prompt('Enter new name:', section.name);
+                              if (newName) editSection(section.id, newName);
+                            }}>Edit</button>
+                            <button onClick={(e) => {
+                              e.stopPropagation();
+                              if (window.confirm('Are you sure you want to delete this section?')) {
+                                removeSection(section.id);
+                              }
+                            }}>×</button>
+                          </div>
                         </div>
+
+                        {section.is_expanded && (
+                          <Droppable droppableId={`section-${section.id}`} type="GROUP">
+                            {(provided, snapshot) => (
+                              <div
+                                ref={provided.innerRef}
+                                {...provided.droppableProps}
+                                className={`section-groups ${snapshot.isDraggingOver ? 'dragging-over' : ''}`}
+                              >
+                                {groups
+                                  .filter(group => group.section_id === section.id)
+                                  .map((group, index) => (
+                                    <Draggable
+                                      key={group.id}
+                                      draggableId={group.id.toString()}
+                                      index={index}
+                                    >
+                                      {(provided, snapshot) => (
+                                        <div
+                                          ref={provided.innerRef}
+                                          {...provided.draggableProps}
+                                          {...provided.dragHandleProps}
+                                          className={`group-item ${selectedGroup?.id === group.id ? 'selected' : ''} ${snapshot.isDragging ? 'dragging' : ''}`}
+                                          onClick={() => handleGroupSelect(group)}
+                                        >
+                                          <span>{group.name}</span>
+                                          <div 
+                                            className="group-actions"
+                                            onClick={e => e.stopPropagation()}
+                                          >
+                                            <button onClick={(e) => copyGroup(e, group)}>
+                                              Copy
+                                            </button>
+                                            <button onClick={(e) => {
+                                              const newName = prompt('Enter new name:', group.name);
+                                              if (newName) editGroup(e, group.id, newName);
+                                            }}>
+                                              Edit
+                                            </button>
+                                            <button onClick={(e) => {
+                                              if (window.confirm('Are you sure you want to delete this group?')) {
+                                                removeGroup(e, group.id);
+                                              }
+                                            }}>
+                                              ×
+                                            </button>
+                                          </div>
+                                        </div>
+                                      )}
+                                    </Draggable>
+                                  ))}
+                                {provided.placeholder}
+                              </div>
+                            )}
+                          </Droppable>
+                        )}
                       </div>
                     )}
                   </Draggable>
                 ))}
+                {provided.placeholder}
+              </div>
+            )}
+          </Droppable>
+
+          <Droppable droppableId="unsectioned" type="GROUP">
+            {(provided, snapshot) => (
+              <div
+                ref={provided.innerRef}
+                {...provided.droppableProps}
+                className={`unsectioned-groups ${snapshot.isDraggingOver ? 'dragging-over' : ''}`}
+              >
+                <h3>Unsectioned Groups</h3>
+                {groups
+                  .filter(group => !group.section_id)
+                  .map((group, index) => (
+                    <Draggable
+                      key={group.id}
+                      draggableId={group.id.toString()}
+                      index={index}
+                    >
+                      {(provided, snapshot) => (
+                        <div
+                          ref={provided.innerRef}
+                          {...provided.draggableProps}
+                          {...provided.dragHandleProps}
+                          className={`group-item ${selectedGroup?.id === group.id ? 'selected' : ''} ${snapshot.isDragging ? 'dragging' : ''}`}
+                          onClick={() => handleGroupSelect(group)}
+                        >
+                          <span>{group.name}</span>
+                          <div 
+                            className="group-actions"
+                            onClick={e => e.stopPropagation()}
+                          >
+                            <button onClick={(e) => copyGroup(e, group)}>
+                              Copy
+                            </button>
+                            <button onClick={(e) => {
+                              const newName = prompt('Enter new name:', group.name);
+                              if (newName) editGroup(e, group.id, newName);
+                            }}>
+                              Edit
+                            </button>
+                            <button onClick={(e) => {
+                              if (window.confirm('Are you sure you want to delete this group?')) {
+                                removeGroup(e, group.id);
+                              }
+                            }}>
+                              ×
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </Draggable>
+                  ))}
                 {provided.placeholder}
               </div>
             )}

@@ -10,7 +10,7 @@
 }
 
 .groups-section {
-  width: 200px;
+  width: 250px;
   padding: 15px;
   background-color: #f5f5f5;
   border-right: 1px solid #ddd;
@@ -61,7 +61,7 @@
 .add-form {
   display: flex;
   gap: 4px;
-  margin-top: 15px;
+  margin-bottom: 10px;
 }
 
 .add-form input {
@@ -88,18 +88,103 @@
   justify-content: center;
 }
 
-.groups-list {
+.sections-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.section-item {
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  transition: all 0.2s ease;
+}
+
+.section-item.dragging {
+  opacity: 0.8;
+  transform: scale(1.02);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.2s;
+}
+
+.section-header:hover {
+  filter: brightness(95%);
+}
+
+.section-name {
+  font-weight: 500;
+  color: white;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+}
+
+.section-actions {
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.section-header:hover .section-actions {
+  opacity: 1;
+}
+
+.section-actions button {
+  padding: 2px 6px;
+  font-size: 11px;
+  background-color: rgba(255,255,255,0.2);
+  color: white;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.section-actions button:hover {
+  background-color: rgba(255,255,255,0.3);
+}
+
+.section-groups {
+  background-color: rgba(255,255,255,0.9);
+  padding: 8px;
   display: flex;
   flex-direction: column;
   gap: 6px;
-  min-height: 50px;
-  padding: 5px;
-  transition: background-color 0.2s ease;
+  min-height: 40px;
+  transition: background-color 0.2s;
 }
 
-.groups-list.dragging-over {
+.section-groups.dragging-over {
   background-color: #e3f2fd;
+}
+
+.unsectioned-groups {
+  margin-top: 20px;
+  padding: 8px;
+  background-color: #f5f5f5;
   border-radius: 4px;
+  min-height: 40px;
+  transition: background-color 0.2s;
+}
+
+.unsectioned-groups.dragging-over {
+  background-color: #e3f2fd;
+}
+
+.unsectioned-groups h3 {
+  margin: 0 0 10px 0;
+  font-size: 14px;
+  color: #666;
 }
 
 .group-item {
@@ -112,6 +197,7 @@
   border: 1px solid #ddd;
   user-select: none;
   transition: all 0.2s ease;
+  cursor: grab;
 }
 
 .group-item:hover {
@@ -129,6 +215,7 @@
   background-color: #e3f2fd;
   box-shadow: 0 5px 10px rgba(0,0,0,0.15);
   opacity: 0.8;
+  cursor: grabbing;
 }
 
 .group-actions {
@@ -163,12 +250,11 @@
   gap: 20px;
   padding: 5px;
   min-height: 100px;
-  transition: background-color 0.2s ease;
+  transition: background-color 0.2s;
 }
 
 .lists-container.dragging-over {
   background-color: #e3f2fd;
-  border-radius: 4px;
 }
 
 .list {
@@ -223,7 +309,7 @@
   border-radius: 4px;
   padding: 10px;
   margin-bottom: 10px;
-  transition: background-color 0.2s ease;
+  transition: background-color 0.2s;
 }
 
 .symbols-container.dragging-over {
